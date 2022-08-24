@@ -318,6 +318,22 @@ void PositionEffector<DataTypes>::getConstraintViolation(const ConstraintParams*
 
 
 template<class DataTypes>
+void PositionEffector<DataTypes>::getConstraintResolution(const ConstraintParams* cParam,
+                                                         std::vector<ConstraintResolution*>& resTab,
+                                                         unsigned int& offset)
+{
+    if(d_componentState.getValue() != ComponentState::Valid)
+            return ;
+
+    SOFA_UNUSED(cParam);
+
+    EffectorConstraintResolution *cr=  new EffectorConstraintResolution(m_nbLines);
+    resTab[offset++] =cr;
+    }
+}
+
+
+template<class DataTypes>
 void PositionEffector<DataTypes>::storeResults(vector<double> &delta)
 {
     if(d_componentState.getValue() != ComponentState::Valid)

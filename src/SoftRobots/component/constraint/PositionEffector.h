@@ -29,6 +29,7 @@
 
 #include "Effector.h"
 #include <SoftRobots/component/initSoftRobots.h>
+#include <sofa/core/behavior/ConstraintResolution.h>
 
 namespace sofa
 {
@@ -43,6 +44,21 @@ using sofa::core::ConstraintParams ;
 using sofa::linearalgebra::BaseVector ;
 using sofa::type::Vec ;
 using sofa::core::visual::VisualParams ;
+using sofa::core::behavior::ConstraintResolution;
+
+class EffectorConstraintResolution : public ConstraintResolution
+{
+public:
+    EffectorConstraintResolution(unsigned int nbLines);
+
+    //////////////////// Inherited from ConstraintResolution ////////////////////
+    void resolution(int line, double** w, double* d, double* lambda, double* dfree) override;
+    /////////////////////////////////////////////////////////////////////////////
+
+protected:
+      unsigned int   nbLines;
+};
+
 
 /**
  * The "PositionEffector" component is used to constrain one or several points of a model
@@ -89,6 +105,12 @@ public:
                                 BaseVector *resV,
                                 const BaseVector *Jdx) override;
     ///////////////////////////////////////////////////////////////
+
+    /////////////////// Inherited from BaseConstraint ///////////////
+    void getConstraintResolution(const core::ConstraintParams *cParam,
+                                 std::vector<ConstraintResolution*>& resTab,
+                                 unsigned int& offset) override;
+    ////////////////////////////////////////////////////////////////
 
 
     /////////////// Inherited from BaseSoftRobotsConstraint ////////////////

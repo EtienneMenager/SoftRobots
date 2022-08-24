@@ -42,6 +42,26 @@ using namespace sofa::defaulttype;
 using core::ConstraintParams;
 
 
+//----------- Effector Constraint  Resolution --------------
+EffectorConstraintResolution::EffectorConstraintResolution(unsigned int nbLines)
+    : sofa::core::behavior::ConstraintResolution(nbLines)
+    , nbLines(nbLines)
+{ }
+
+void EffectorConstraintResolution::resolution(int line, double** w, double* d, double* lambda, double* dfree)
+{
+    SOFA_UNUSED(dfree);
+    SOFA_UNUSED(w);
+    SOFA_UNUSED(d);
+
+    for(unsigned int i = 0, i < nbLines, i++){
+      lambda[line + i ] = 0.0
+    }
+}
+
+
+
+
 template<>
 void PositionEffector<Rigid3Types>::normalizeDirections()
 {
