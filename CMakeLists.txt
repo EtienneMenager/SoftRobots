@@ -34,7 +34,7 @@ set(HEADER_FILES
     ${SOFTROBOTS_SOURCE_DIR}/component/behavior/SoftRobotsBaseConstraint.h
     ${SOFTROBOTS_SOURCE_DIR}/component/behavior/SoftRobotsConstraint.h
     ${SOFTROBOTS_SOURCE_DIR}/component/behavior/SoftRobotsConstraint.inl
-    
+
     ${SOFTROBOTS_SOURCE_DIR}/component/constraint/CableConstraint.h
     ${SOFTROBOTS_SOURCE_DIR}/component/constraint/CableConstraint.inl
     ${SOFTROBOTS_SOURCE_DIR}/component/constraint/PartialRigidificationConstraint.h
@@ -49,6 +49,10 @@ set(HEADER_FILES
     ${SOFTROBOTS_SOURCE_DIR}/component/constraint/model/CableModel.inl
     ${SOFTROBOTS_SOURCE_DIR}/component/constraint/model/SurfacePressureModel.h
     ${SOFTROBOTS_SOURCE_DIR}/component/constraint/model/SurfacePressureModel.inl
+    ${SOFTROBOTS_SOURCE_DIR}/component/constraint/Effector.h
+    ${SOFTROBOTS_SOURCE_DIR}/component/constraint/Effector.inl
+    ${SOFTROBOTS_SOURCE_DIR}/component/constraint/PositionEffector.h
+    ${SOFTROBOTS_SOURCE_DIR}/component/constraint/PositionEffector.inl
 
     ${SOFTROBOTS_SOURCE_DIR}/component/controller/AnimationEditor.h
     ${SOFTROBOTS_SOURCE_DIR}/component/controller/AnimationEditor.inl
@@ -84,6 +88,8 @@ set(SOURCE_FILES
     ${SOFTROBOTS_SOURCE_DIR}/component/constraint/model/AffineFunctionModel.cpp
     ${SOFTROBOTS_SOURCE_DIR}/component/constraint/model/CableModel.cpp
     ${SOFTROBOTS_SOURCE_DIR}/component/constraint/model/SurfacePressureModel.cpp
+    ${SOFTROBOTS_SOURCE_DIR}/component/constraint/Effector.cpp
+    ${SOFTROBOTS_SOURCE_DIR}/component/constraint/PositionEffector.cpp
 
     ${SOFTROBOTS_SOURCE_DIR}/component/controller/AnimationEditor.cpp
     ${SOFTROBOTS_SOURCE_DIR}/component/controller/DataVariationLimiter.cpp
@@ -162,8 +168,8 @@ endif()
 if (SOFTROBOTS_WITH_CAMERA)
   list(APPEND HEADER_FILES
     ${SOFTROBOTS_SOURCE_DIR}/component/camera/PointCloudProcessing.h
-    ${SOFTROBOTS_SOURCE_DIR}/component/camera/PointCloudStreaming.h  
-    )  
+    ${SOFTROBOTS_SOURCE_DIR}/component/camera/PointCloudStreaming.h
+    )
   list(APPEND SOURCE_FILES
     ${SOFTROBOTS_SOURCE_DIR}/component/camera/PointCloudProcessing.cpp
     ${SOFTROBOTS_SOURCE_DIR}/component/camera/PointCloudStreaming.cpp
@@ -234,7 +240,7 @@ if (SOFTROBOTS_WITH_CAMERA)
     add_definitions(${PCL_DEFINITIONS})
     message(${PCL_LIBRARY_DIRS})
     link_directories(${PCL_LIBRARY_DIRS})
-    
+
     target_link_libraries(${PROJECT_NAME} ${PCL_LIBRARIES} ${REALSENSE_LIBRARY})
   else (PCL_FOUND)
     message( FATAL_ERROR "The Point Cloud Library (PCL) is required to compile SoftRobots with camera. Either turn off the SOFTROBOTS_WITH_CAMERA option, or provide the link to the PCL")
