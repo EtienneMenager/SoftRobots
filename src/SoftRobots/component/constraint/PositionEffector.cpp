@@ -54,9 +54,8 @@ void EffectorConstraintResolution::resolution(int line, double** w, double* d, d
     SOFA_UNUSED(w);
     SOFA_UNUSED(d);
 
-    for(unsigned int i = 0, i < nbLines, i++){
-      lambda[line + i ] = 0.0
-    }
+    for(unsigned int i = 0; i < nbLines; i++)
+      lambda[line + i ] = 0.0;
 }
 
 

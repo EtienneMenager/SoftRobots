@@ -329,8 +329,8 @@ void PositionEffector<DataTypes>::getConstraintResolution(const ConstraintParams
 
     EffectorConstraintResolution *cr=  new EffectorConstraintResolution(m_nbLines);
     resTab[offset++] =cr;
-    }
 }
+
 
 
 template<class DataTypes>
