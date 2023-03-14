@@ -43,9 +43,9 @@ using core::ConstraintParams;
 
 
 //----------- Effector Constraint  Resolution --------------
-EffectorConstraintResolution::EffectorConstraintResolution(unsigned int nbLines)
+EffectorConstraintResolution::EffectorConstraintResolution(double fx, double fy, double fz, unsigned int nbLines)
     : sofa::core::behavior::ConstraintResolution(nbLines)
-    , nbLines(nbLines)
+    , nbLines(nbLines), mfx(fx), mfy(fy), mfz(fz)
 { }
 
 void EffectorConstraintResolution::resolution(int line, double** w, double* d, double* lambda, double* dfree)
@@ -53,9 +53,14 @@ void EffectorConstraintResolution::resolution(int line, double** w, double* d, d
     SOFA_UNUSED(dfree);
     SOFA_UNUSED(w);
     SOFA_UNUSED(d);
+    
+    lambda[line] = mfx;
+    lambda[line+1] = mfy;
+    lambda[line+2] = mfz;
+    
 
-    for(unsigned int i = 0; i < nbLines; i++)
-      lambda[line + i ] = 0.0;
+   // for(unsigned int i = 0; i < nbLines; i++)
+    //  lambda[line + i ] = 0.0;
 }
 
 

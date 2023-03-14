@@ -49,7 +49,7 @@ using sofa::core::behavior::ConstraintResolution;
 class EffectorConstraintResolution : public ConstraintResolution
 {
 public:
-    EffectorConstraintResolution(unsigned int nbLines);
+    EffectorConstraintResolution(double fx, double fy, double fz, unsigned int nbLines);
 
     //////////////////// Inherited from ConstraintResolution ////////////////////
     void resolution(int line, double** w, double* d, double* lambda, double* dfree) override;
@@ -57,6 +57,10 @@ public:
 
 protected:
       unsigned int   nbLines;
+      
+      double mfx;
+      double mfy;
+      double mfz;
 };
 
 
@@ -123,6 +127,7 @@ protected:
     Data<VecDeriv>                                  d_directions;
     Data<Vec<Deriv::total_size,bool>>               d_useDirections;
     Data<type::vector<double>>                    d_delta;
+    Data<Vec<Deriv::total_size,double>>        d_force;
 
     unsigned int                                    m_nbEffector;
 

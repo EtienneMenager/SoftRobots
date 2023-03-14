@@ -73,6 +73,8 @@ PositionEffector<DataTypes>::PositionEffector(MechanicalState* object)
                               "values are all true."))
 
     , d_delta(initData(&d_delta, "delta","Distance to target"))
+    , d_force(initData(&d_force,"imposedForce",
+                          "Parameter to impose the force."))
 
     , m_nbEffector(0)
 {
@@ -326,9 +328,14 @@ void PositionEffector<DataTypes>::getConstraintResolution(const ConstraintParams
             return ;
 
     SOFA_UNUSED(cParam);
+    
+    double fx =d_force.getValue()[0];
+    double fy =d_force.getValue()[1];
+    double fz =d_force.getValue()[2];
 
-    EffectorConstraintResolution *cr=  new EffectorConstraintResolution(m_nbLines);
-    resTab[offset++] =cr;
+    EffectorConstraintResolution *cr=  new EffectorConstraintResolution(fx, fy, fz, m_nbLines);
+    resTab[offset] =cr;
+    offset+=3;
 }
 
 
