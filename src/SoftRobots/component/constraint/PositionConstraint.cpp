@@ -24,9 +24,9 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-#define SOFTROBOTS_POSITIONEFFECTOR_CPP
+#define SOFTROBOTS_POSITIONCONSTRAINT_CPP
 
-#include "PositionEffector.inl"
+#include "PositionConstraint.inl"
 #include <sofa/core/ObjectFactory.h>
 
 namespace sofa
@@ -42,13 +42,14 @@ using namespace sofa::defaulttype;
 using core::ConstraintParams;
 
 
-//----------- Effector Constraint  Resolution --------------
-EffectorConstraintResolution::EffectorConstraintResolution(double fx, double fy, double fz, unsigned int nbLines)
+//----------- Position Force Constraint  Resolution --------------
+PositionForceConstraintResolution::PositionForceConstraintResolution(double fx, double fy, double fz, unsigned int nbLines)
     : sofa::core::behavior::ConstraintResolution(nbLines)
     , nbLines(nbLines), mfx(fx), mfy(fy), mfz(fz)
 { }
 
-void EffectorConstraintResolution::resolution(int line, double** w, double* d, double* lambda, double* dfree)
+
+void PositionForceConstraintResolution::resolution(int line, double** w, double* d, double* lambda, double* dfree)
 {
     SOFA_UNUSED(dfree);
     SOFA_UNUSED(w);
@@ -57,17 +58,42 @@ void EffectorConstraintResolution::resolution(int line, double** w, double* d, d
     lambda[line] = mfx;
     lambda[line+1] = mfy;
     lambda[line+2] = mfz;
-    
+}
 
-   // for(unsigned int i = 0; i < nbLines; i++)
-    //  lambda[line + i ] = 0.0;
+
+//---------- Position Displacement Constraint Resolution ------------
+    PositionDisplacementConstraintResolution::PositionDisplacementConstraintResolution(double x, double y, double z, unsigned int nbLines)
+    : sofa::core::behavior::ConstraintResolution(nbLines)
+            , nbLines(nbLines), mx(x), my(y), mz(z)
+    { }
+
+void PositionDisplacementConstraintResolution::init(int line, double** w, double * lambda)
+{
+    SOFA_UNUSED(lambda);
+    m_wActuatorActuator_x = w[line][line];
+    m_wActuatorActuator_y = w[line+1][line+1];
+    m_wActuatorActuator_z = w[line+2][line+2];
+}
+
+
+void PositionDisplacementConstraintResolution::resolution(int line, double** w, double* d, double* lambda, double* dfree)
+{
+    SOFA_UNUSED(dfree);
+    SOFA_UNUSED(w);
+
+    // da=Waa*(lambda_a) + Sum Wai * lambda_i  = m_imposedDisplacement
+    // d is the cumulative sum
+    lambda[line] -= (d[line]-mx) / m_wActuatorActuator_x;
+    lambda[line+1] -= (d[line+1]-my) / m_wActuatorActuator_y;
+    lambda[line+2] -= (d[line+2]-mz) / m_wActuatorActuator_z;
+
 }
 
 
 
 
 template<>
-void PositionEffector<Rigid3Types>::normalizeDirections()
+void PositionConstraint<Rigid3Types>::normalizeDirections()
 {
     VecDeriv directions;
     directions.resize(6);
@@ -85,7 +111,7 @@ void PositionEffector<Rigid3Types>::normalizeDirections()
 
 
 template<>
-void PositionEffector<Rigid3Types>::draw(const VisualParams* vparams)
+void PositionConstraint<Rigid3Types>::draw(const VisualParams* vparams)
 {
     if(d_componentState.getValue() != ComponentState::Valid)
         return;
@@ -113,10 +139,10 @@ using namespace sofa::helper;
 // 1-RegisterObject("description") + .add<> : Register the component
 // 2-.add<>(true) : Set default template
 
-volatile int PositionEffectorClass = core::RegisterObject("This component is used to describe one or several desired positions "
+volatile int PositionConstraintClass = core::RegisterObject("This component is used to describe one or several desired positions "
                                                  "of points of a model, that will be reached by acting on chosen actuator(s).")
-                .add< PositionEffector<Vec3Types> >(true)
-                .add< PositionEffector<Rigid3Types> >()
+                .add< PositionConstraint<Vec3Types> >(true)
+                .add< PositionConstraint<Rigid3Types> >()
 
         ;
 
@@ -126,8 +152,8 @@ volatile int PositionEffectorClass = core::RegisterObject("This component is use
 // This goes with the extern template declaration in the .h. Declaring extern template
 // avoid the code generation of the template for each compilation unit.
 // see: http://www.stroustrup.com/C++11FAQ.html#extern-templates
-template class SOFA_SOFTROBOTS_API PositionEffector<sofa::defaulttype::Vec3Types>;
-template class SOFA_SOFTROBOTS_API PositionEffector<sofa::defaulttype::Rigid3Types>;
+template class SOFA_SOFTROBOTS_API PositionConstraint<sofa::defaulttype::Vec3Types>;
+template class SOFA_SOFTROBOTS_API PositionConstraint<sofa::defaulttype::Rigid3Types>;
 
 
 } // namespace constraintset

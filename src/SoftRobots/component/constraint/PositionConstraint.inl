@@ -24,13 +24,13 @@
 *                                                                             *
 * Contact information: contact@sofa-framework.org                             *
 ******************************************************************************/
-#ifndef SOFA_COMPONENT_CONSTRAINTSET_POSITIONEFFECTOR_INL
-#define SOFA_COMPONENT_CONSTRAINTSET_POSITIONEFFECTOR_INL
+#ifndef SOFA_COMPONENT_CONSTRAINTSET_POSITIONCONSTRAINT_INL
+#define SOFA_COMPONENT_CONSTRAINTSET_POSITIONCONSTRAINT_INL
 
 #include <sofa/core/visual/VisualParams.h>
 #include <sofa/helper/logging/Messaging.h>
 
-#include "PositionEffector.h"
+#include "PositionConstraint.h"
 
 namespace sofa
 {
@@ -50,10 +50,16 @@ using sofa::type::vector ;
 using type::Vec;
 using type::Vector3;
 using sofa::type::RGBAColor;
+using sofa::helper::OptionsGroup;
 
 template<class DataTypes>
-PositionEffector<DataTypes>::PositionEffector(MechanicalState* object)
-    : Inherit1(object)
+PositionConstraint<DataTypes>::PositionConstraint(MechanicalState* mm)
+    : SoftRobotsConstraint<DataTypes>(mm)
+
+    , d_limitShiftToTarget(initData(&d_limitShiftToTarget, false, "limitShiftToTarget", "If true will limit the effector goal to be at \n"
+                                                                                            "maxShiftToTarget."))
+    , d_maxShiftToTarget(initData(&d_maxShiftToTarget, Real(1.), "maxShiftToTarget", "Maximum shift to effector goal if limitShiftToTarget \n"
+                                                                                         "is set to true."))
     , d_indices(initData(&d_indices, "indices",
                                  "If indices size is lower than effectorGoal size, \n"
                                  "some effectorGoal will not be considered"))
@@ -73,8 +79,13 @@ PositionEffector<DataTypes>::PositionEffector(MechanicalState* object)
                               "values are all true."))
 
     , d_delta(initData(&d_delta, "delta","Distance to target"))
-    , d_force(initData(&d_force,"imposedForce",
-                          "Parameter to impose the force."))
+    , d_value(initData(&d_value,"imposedValue",
+                          "Parameter to impose the force (with value_type = force) or to impose displacement (with value_type = displacement)."))
+
+    , d_valueType(initData(&d_valueType, OptionsGroup(2,"displacement","force"), "valueType",
+                               "displacement = the contstraint will impose the displacement provided in data value[valueIndex] \n"
+                               "force = the contstraint will impose the force provided in data value[valueIndex] \n"
+                               "If unspecified, the default value is displacement"))
 
     , m_nbEffector(0)
 {
@@ -83,18 +94,62 @@ PositionEffector<DataTypes>::PositionEffector(MechanicalState* object)
     d_delta.setGroup("Vector");
 
     d_delta.setReadOnly(true);
+    m_constraintType = ACTUATOR;
 }
 
 
-
 template<class DataTypes>
-PositionEffector<DataTypes>::~PositionEffector()
+PositionConstraint<DataTypes>::~PositionConstraint()
 {
 }
 
 
 template<class DataTypes>
-void PositionEffector<DataTypes>::init()
+std::string PositionConstraint<DataTypes>::getTemplateName() const
+{
+    return templateName(this);
+}
+
+template<class DataTypes>
+std::string PositionConstraint<DataTypes>::templateName(const PositionConstraint<DataTypes>*)
+{
+    return DataTypes::Name();
+}
+
+
+template<class DataTypes>
+SReal PositionConstraint<DataTypes>:: getTarget(const Real& target, const Real& current)
+{
+    Real newTarget = target;
+    if(d_limitShiftToTarget.getValue())
+    {
+        Real shift = abs(target-current);
+        if(shift>d_maxShiftToTarget.getValue())
+        {
+            if(target>current)
+                newTarget = current + d_maxShiftToTarget.getValue();
+            else
+                newTarget = current - d_maxShiftToTarget.getValue();
+        }
+    }
+
+    return newTarget;
+}
+
+template<class DataTypes>
+typename DataTypes::Coord PositionConstraint<DataTypes>:: getTarget(const Coord& target, const Coord& current)
+{
+    Coord newTarget = target;
+    for(int i=0; i<DataTypes::Coord::total_size; i++)
+        newTarget[i]=getTarget(target[i], current[i]);
+
+    return newTarget;
+}
+
+
+
+template<class DataTypes>
+void PositionConstraint<DataTypes>::init()
 {
     d_componentState = ComponentState::Valid;
     Inherit1::init();
@@ -114,14 +169,14 @@ void PositionEffector<DataTypes>::init()
 
 
 template<class DataTypes>
-void PositionEffector<DataTypes>::reinit()
+void PositionConstraint<DataTypes>::reinit()
 {
     internalInit();
 }
 
 
 template<class DataTypes>
-void PositionEffector<DataTypes>::internalInit()
+void PositionConstraint<DataTypes>::internalInit()
 {
     if(!d_directions.isSet())
         setDefaultDirections();
@@ -182,7 +237,7 @@ void PositionEffector<DataTypes>::internalInit()
 
 
 template<class DataTypes>
-void PositionEffector<DataTypes>::checkIndicesRegardingState()
+void PositionConstraint<DataTypes>::checkIndicesRegardingState()
 {
     ReadAccessor<Data<VecCoord> > positions = m_state->readPositions();
 
@@ -212,7 +267,7 @@ void PositionEffector<DataTypes>::checkIndicesRegardingState()
 
 
 template<class DataTypes>
-void PositionEffector<DataTypes>::setEffectorGoalDefaultValue()
+void PositionConstraint<DataTypes>::setEffectorGoalDefaultValue()
 {
     WriteAccessor<Data<VecCoord> > defaultEffectorGoal = d_effectorGoalPositions;
     defaultEffectorGoal.resize(1);
@@ -221,21 +276,21 @@ void PositionEffector<DataTypes>::setEffectorGoalDefaultValue()
 
 
 template<class DataTypes>
-void PositionEffector<DataTypes>::setEffectorIndicesDefaultValue()
+void PositionConstraint<DataTypes>::setEffectorIndicesDefaultValue()
 {
     WriteAccessor<Data<vector<unsigned int> > > defaultEffectorIndices = d_indices;
     defaultEffectorIndices.resize(1, 0);
 }
 
 template<class DataTypes>
-void PositionEffector<DataTypes>::resizeIndicesRegardingState()
+void PositionConstraint<DataTypes>::resizeIndicesRegardingState()
 {
     WriteAccessor<Data<vector<unsigned int>>> effectorIndices = d_indices;
     effectorIndices.resize(m_state->getSize());
 }
 
 template<class DataTypes>
-void PositionEffector<DataTypes>::resizeEffectorData()
+void PositionConstraint<DataTypes>::resizeEffectorData()
 {
     if(d_indices.getValue().size() < d_effectorGoalPositions.getValue().size())
     {
@@ -253,7 +308,7 @@ void PositionEffector<DataTypes>::resizeEffectorData()
 
 
 template<class DataTypes>
-void PositionEffector<DataTypes>::buildConstraintMatrix(const ConstraintParams* cParams,
+void PositionConstraint<DataTypes>::buildConstraintMatrix(const ConstraintParams* cParams,
                                                         DataMatrixDeriv &cMatrix,
                                                         unsigned int &cIndex,
                                                         const DataVecCoord &x)
@@ -289,7 +344,7 @@ void PositionEffector<DataTypes>::buildConstraintMatrix(const ConstraintParams* 
 
 
 template<class DataTypes>
-void PositionEffector<DataTypes>::getConstraintViolation(const ConstraintParams* cParams,
+void PositionConstraint<DataTypes>::getConstraintViolation(const ConstraintParams* cParams,
                                                          BaseVector *resV,
                                                          const BaseVector *Jdx)
 {
@@ -320,7 +375,7 @@ void PositionEffector<DataTypes>::getConstraintViolation(const ConstraintParams*
 
 
 template<class DataTypes>
-void PositionEffector<DataTypes>::getConstraintResolution(const ConstraintParams* cParam,
+void PositionConstraint<DataTypes>::getConstraintResolution(const ConstraintParams* cParam,
                                                          std::vector<ConstraintResolution*>& resTab,
                                                          unsigned int& offset)
 {
@@ -328,20 +383,35 @@ void PositionEffector<DataTypes>::getConstraintResolution(const ConstraintParams
             return ;
 
     SOFA_UNUSED(cParam);
-    
-    double fx =d_force.getValue()[0];
-    double fy =d_force.getValue()[1];
-    double fz =d_force.getValue()[2];
 
-    EffectorConstraintResolution *cr=  new EffectorConstraintResolution(fx, fy, fz, m_nbLines);
-    resTab[offset] =cr;
-    offset+=3;
+    if(d_valueType.getValue().getSelectedItem() == "displacement") // displacement
+    {
+        double x =d_value.getValue()[0];
+        double y =d_value.getValue()[1];
+        double z =d_value.getValue()[2];
+
+        PositionDisplacementConstraintResolution *cr=  new PositionDisplacementConstraintResolution(x, y, z, m_nbLines);
+        resTab[offset] =cr;
+        offset+=3;
+    }
+    else // force
+    {
+        double fx =d_value.getValue()[0];
+        double fy =d_value.getValue()[1];
+        double fz =d_value.getValue()[2];
+
+        PositionForceConstraintResolution *cr=  new PositionForceConstraintResolution(fx, fy, fz, m_nbLines);
+        resTab[offset] =cr;
+        offset+=3;
+    }
+    
+
 }
 
 
 
 template<class DataTypes>
-void PositionEffector<DataTypes>::storeResults(vector<double> &delta)
+void PositionConstraint<DataTypes>::storeResults(vector<double> &delta)
 {
     if(d_componentState.getValue() != ComponentState::Valid)
         return;
@@ -351,7 +421,7 @@ void PositionEffector<DataTypes>::storeResults(vector<double> &delta)
 
 
 template<class DataTypes>
-void PositionEffector<DataTypes>::setDefaultDirections()
+void PositionConstraint<DataTypes>::setDefaultDirections()
 {
     VecDeriv directions;
     directions.resize(Deriv::total_size);
@@ -362,7 +432,7 @@ void PositionEffector<DataTypes>::setDefaultDirections()
 
 
 template<class DataTypes>
-void PositionEffector<DataTypes>::setDefaultUseDirections()
+void PositionConstraint<DataTypes>::setDefaultUseDirections()
 {
     Vec<Deriv::total_size,bool> useDirections;
     for(int i=0; i<Deriv::total_size; i++)
@@ -372,7 +442,7 @@ void PositionEffector<DataTypes>::setDefaultUseDirections()
 
 
 template<class DataTypes>
-void PositionEffector<DataTypes>::normalizeDirections()
+void PositionConstraint<DataTypes>::normalizeDirections()
 {
     WriteAccessor<Data<VecDeriv>> directions = d_directions;
     directions.resize(Deriv::total_size);
@@ -382,7 +452,7 @@ void PositionEffector<DataTypes>::normalizeDirections()
 
 
 template<class DataTypes>
-void PositionEffector<DataTypes>::draw(const VisualParams* vparams)
+void PositionConstraint<DataTypes>::draw(const VisualParams* vparams)
 {
     if(d_componentState.getValue() != ComponentState::Valid)
         return;

@@ -49,10 +49,8 @@ set(HEADER_FILES
     ${SOFTROBOTS_SOURCE_DIR}/component/constraint/model/CableModel.inl
     ${SOFTROBOTS_SOURCE_DIR}/component/constraint/model/SurfacePressureModel.h
     ${SOFTROBOTS_SOURCE_DIR}/component/constraint/model/SurfacePressureModel.inl
-    ${SOFTROBOTS_SOURCE_DIR}/component/constraint/Effector.h
-    ${SOFTROBOTS_SOURCE_DIR}/component/constraint/Effector.inl
-    ${SOFTROBOTS_SOURCE_DIR}/component/constraint/PositionEffector.h
-    ${SOFTROBOTS_SOURCE_DIR}/component/constraint/PositionEffector.inl
+    ${SOFTROBOTS_SOURCE_DIR}/component/constraint/PositionConstraint.h
+    ${SOFTROBOTS_SOURCE_DIR}/component/constraint/PositionConstraint.inl
 
     ${SOFTROBOTS_SOURCE_DIR}/component/controller/AnimationEditor.h
     ${SOFTROBOTS_SOURCE_DIR}/component/controller/AnimationEditor.inl
@@ -88,8 +86,7 @@ set(SOURCE_FILES
     ${SOFTROBOTS_SOURCE_DIR}/component/constraint/model/AffineFunctionModel.cpp
     ${SOFTROBOTS_SOURCE_DIR}/component/constraint/model/CableModel.cpp
     ${SOFTROBOTS_SOURCE_DIR}/component/constraint/model/SurfacePressureModel.cpp
-    ${SOFTROBOTS_SOURCE_DIR}/component/constraint/Effector.cpp
-    ${SOFTROBOTS_SOURCE_DIR}/component/constraint/PositionEffector.cpp
+    ${SOFTROBOTS_SOURCE_DIR}/component/constraint/PositionConstraint.cpp
 
     ${SOFTROBOTS_SOURCE_DIR}/component/controller/AnimationEditor.cpp
     ${SOFTROBOTS_SOURCE_DIR}/component/controller/DataVariationLimiter.cpp
