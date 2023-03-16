@@ -115,6 +115,8 @@ public:
     typedef Data<VecDeriv>                          DataVecDeriv;
     typedef Data<MatrixDeriv>                       DataMatrixDeriv;
 
+    typedef type::vector<unsigned int> SetIndexArray;
+
     std::string getTemplateName() const override;
     static std::string templateName(const PositionConstraint<DataTypes>* = nullptr);
 
@@ -202,6 +204,8 @@ private:
     using SoftRobotsConstraint<DataTypes>::addAlias ;
     using SoftRobotsConstraint<DataTypes>::m_state ;
     ////////////////////////////////////////////////////////////////////////////
+
+    VecCoord m_initialPositions;
 };
 
 

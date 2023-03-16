@@ -80,10 +80,10 @@ PositionConstraint<DataTypes>::PositionConstraint(MechanicalState* mm)
 
     , d_delta(initData(&d_delta, "delta","Distance to target"))
     , d_value(initData(&d_value,"imposedValue",
-                          "Parameter to impose the force (with value_type = force) or to impose displacement (with value_type = displacement)."))
+                          "Parameter to impose the force (with value_type = force) or to impose relative displacement (with value_type = displacement)."))
 
     , d_valueType(initData(&d_valueType, OptionsGroup(2,"displacement","force"), "valueType",
-                               "displacement = the contstraint will impose the displacement provided in data value[valueIndex] \n"
+                               "displacement = the contstraint will impose the relative displacement provided in data value[valueIndex] \n"
                                "force = the contstraint will impose the force provided in data value[valueIndex] \n"
                                "If unspecified, the default value is displacement"))
 
@@ -233,6 +233,17 @@ void PositionConstraint<DataTypes>::internalInit()
     m_nbEffector = d_indices.getValue().size();
 
     checkIndicesRegardingState();
+
+    // Save initial positions
+    ReadAccessor<Data<VecCoord>> restPositions = m_state->readRestPositions();
+    const SetIndexArray &indices = d_indices.getValue();
+    m_initialPositions.resize(indices.size());
+    for(int i=0; i< m_nbEffector; i++)
+    {
+        m_initialPositions[i] = restPositions[indices[i]];
+    }
+  
+
 }
 
 
@@ -323,9 +334,9 @@ void PositionConstraint<DataTypes>::buildConstraintMatrix(const ConstraintParams
     MatrixDeriv& column = *cMatrix.beginEdit();
 
     unsigned int index = 0;
-    for (unsigned i=0; i<m_nbEffector; i++)
+    for (unsigned int i=0; i<m_nbEffector; i++)
     {
-        for(int j=0; j<Deriv::total_size; j++)
+        for(unsigned int j=0; j<Deriv::total_size; j++)
         {
             if(d_useDirections.getValue()[j])
             {
@@ -385,10 +396,17 @@ void PositionConstraint<DataTypes>::getConstraintResolution(const ConstraintPara
     SOFA_UNUSED(cParam);
 
     if(d_valueType.getValue().getSelectedItem() == "displacement") // displacement
-    {
-        double x =d_value.getValue()[0];
-        double y =d_value.getValue()[1];
-        double z =d_value.getValue()[2];
+    {   
+        /**/
+        double x = m_initialPositions[0][0] + d_value.getValue()[0];
+        double y = m_initialPositions[0][1] + d_value.getValue()[1];
+        double z = m_initialPositions[0][2] + d_value.getValue()[2];
+        /**/
+        /*
+        double x = d_value.getValue()[0];
+        double y = d_value.getValue()[1];
+        double z = d_value.getValue()[2];
+        */
 
         PositionDisplacementConstraintResolution *cr=  new PositionDisplacementConstraintResolution(x, y, z, m_nbLines);
         resTab[offset] =cr;
@@ -407,7 +425,6 @@ void PositionConstraint<DataTypes>::getConstraintResolution(const ConstraintPara
     
 
 }
-
 
 
 template<class DataTypes>
